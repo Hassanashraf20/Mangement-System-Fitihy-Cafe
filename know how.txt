@@ -1,0 +1,55 @@
+Backend know How for this project:
+Mangement system fitihy cafe
+_________________________
+1-Admin add order to employee {
+-add emp name who will add order to
+-check is this emmployee found ? and get this employee
+-add drinks order for this emp 
+-add the date (dd-mm-yyyy) for this order asigned to this epm
+}
+
+2-Admin retrive bill (orders) for employee {
+-get emp by name who want to get his bill
+-select period from(dd-mm-yyyy):to(dd-mm-yyyy) for calc his bill at period days
+-check only unpaid orders to retrive it
+-calc his bill by each order (drink price * drink quantity)
+-sum total orders price for get all bill cost
+-make a bill for this emp by total cost
+}
+
+3-Admin make bill paid and delete all orders for this epmloyee {
+-Find the employee by name
+-Find unpaid orders for this employee
+-Mark all unpaid orders as paid
+-Remove all paid orders for this employee
+-All orders marked as paid and removed
+}
+
+___________________________________________
+Frontend know How for this project:
+Mangement system fitihy cafe
+_________________________
+1-Home screen {
+-navbar have (1-mange employees 2-mange drinks 3-mange orders 4-mange bills)
+-any UI accepted
+}
+
+2-mange employees page {
+-Crud oprations for mange employees (add employees - Get All employees - update employee - delete employees )
+}
+
+3-mange drinks page {
+-Crud oprations for mange drinks (add drinks - Get All drinks - update drink - delete drink )
+}
+
+4-mange orders page {
+-add order to employee : 1-add employee name 2-asign drinks from UI side(taken automaticly from drinks details which admin add this in drinks) on this page by click 3-add quantity  4-add the date (dd-mm-yyyy)
+}
+
+5-mange bills page {
+-add employee name and add period from(dd-mm-yyyy):to(dd-mm-yyyy) to reteive a bill in tis specifec time period [Get bill for specfic emp]
+-click btn (create bill) :redirct to page have a bill UI that hold all bill details for tis added emp name (EMP name, [EMU OR DENT],this date period, his orders, total bill cost )
+-click btn (paid) to mark this bill orders as paid and remove it
+}
+
+
