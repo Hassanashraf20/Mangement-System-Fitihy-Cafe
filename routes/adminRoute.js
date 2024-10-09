@@ -10,6 +10,9 @@ const {
 
 const router = express.Router();
 
+const authz = require("../controllers/authController");
+router.use(authz.auth);
+
 // Admin adds drinks for employees
 router.post("/order", addOrderForEmployee);
 

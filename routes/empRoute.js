@@ -10,6 +10,9 @@ const {
 
 const router = express.Router();
 
+const authz = require("../controllers/authController");
+router.use(authz.auth);
+
 router.post("/", createEmp);
 //router.route("/").post(createEmp)
 router.route("/").get(getAllEmp);
