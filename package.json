@@ -2,9 +2,10 @@
   "name": "mangement-system-fitihy-cafe",
   "version": "1.0.0",
   "description": "mangement system fitihy cafe",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "start:dev": "nodemon server.js",
+    "start": "SET NODE_ENV=production && node server.js "
   },
   "author": "ENG Hassan Elsherbiny",
   "license": "ISC",
@@ -29,5 +30,8 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/morgan": "^1.9.9"
+  },
+  "engines": {
+    "node": "^18"
   }
 }
