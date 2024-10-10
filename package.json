@@ -2,7 +2,7 @@
   "name": "mangement-system-fitihy-cafe",
   "version": "1.0.0",
   "description": "mangement system fitihy cafe",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "start:dev": "nodemon server.js",
     "start": "node server.js "
