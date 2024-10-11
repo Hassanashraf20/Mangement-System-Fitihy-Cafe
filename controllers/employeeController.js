@@ -1,7 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const apiError = require("../utils/apiError");
 
-const Employee = require("../models/Employee");
+const Employee = require("../models/employee");
 
 // @desc    Create employee
 // @route   POST /api/employee
