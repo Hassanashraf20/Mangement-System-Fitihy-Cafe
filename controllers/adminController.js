@@ -1,5 +1,5 @@
 const Order = require("../models/order");
-const Employee = require("../models/Employee");
+const Employee = require("../models/employee");
 const Drink = require("../models/Drinks");
 const moment = require("moment");
 
