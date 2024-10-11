@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start:dev": "nodemon server.js",
-    "start": "node server.js "
+    "start": "SET NODE_ENV=production && node server.js"
   },
   "author": "ENG Hassan Elsherbiny",
   "license": "ISC",
