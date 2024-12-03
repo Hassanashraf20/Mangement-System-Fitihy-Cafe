@@ -23,7 +23,7 @@ router.delete("/order/remove-drink", removeSpecificDrinkFromOrder);
 router.delete("/order/remove-order", removeOrderForEmployee);
 
 // Admin retrieves bills for an employee by name
-router.get("/bill", getBillForEmployee);
+router.post("/bill", getBillForEmployee);
 
 // Admin marks all unpaid bills as paid and removes them for a specific employee by name
 router.put("/pay", markBillAsPaidAndRemoveOrders);
