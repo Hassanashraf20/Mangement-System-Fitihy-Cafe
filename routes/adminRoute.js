@@ -6,12 +6,13 @@ const {
   removeOrderForEmployee,
   getBillForEmployee,
   markBillAsPaidAndRemoveOrders,
+  getAllOrders,
 } = require("../controllers/adminController");
 
 const router = express.Router();
 
-const authz = require("../controllers/authController");
-router.use(authz.auth);
+// const authz = require("../controllers/authController");
+// router.use(authz.auth);
 
 // Admin adds drinks for employees
 router.post("/order", addOrderForEmployee);
@@ -27,5 +28,7 @@ router.post("/bill", getBillForEmployee);
 
 // Admin marks all unpaid bills as paid and removes them for a specific employee by name
 router.put("/pay", markBillAsPaidAndRemoveOrders);
+
+router.get("/orders", getAllOrders);
 
 module.exports = router;

@@ -177,9 +177,6 @@ exports.getBillForEmployee = async (req, res) => {
     const start = moment(startDate, "DD-MM-YYYY").startOf("day").toDate();
     const end = moment(endDate, "DD-MM-YYYY").endOf("day").toDate();
 
-    // const start = dayjs(startDate, "DD-MM-YYYY").startOf("day").toDate();
-    // const end = dayjs(endDate, "DD-MM-YYYY").endOf("day").toDate();
-
     // Find employee by name
     const employee = await Employee.findOne({ name: employeeName });
     if (!employee) {
@@ -211,6 +208,11 @@ exports.getBillForEmployee = async (req, res) => {
         totalBill += drink.price; // Total cost per drink
       });
     });
+
+    await Order.updateOne(
+      { employee: employee._id, paid: false },
+      { $set: { paid: true, totalOrdersPrice: totalBill } }
+    );
 
     // Send the bill response
     res.status(200).json({
@@ -261,5 +263,45 @@ exports.markBillAsPaidAndRemoveOrders = async (req, res) => {
     });
   } catch (err) {
     res.status(500).send({ msg: "Server Error", erroe: err.massege });
+  }
+};
+
+exports.getAllOrders = async (req, res) => {
+  try {
+    // Retrieve all orders and populate employee's name
+    const allOrders = await Order.find().populate("employee", "name");
+
+    if (!allOrders || allOrders.length === 0) {
+      return res.status(404).json({ msg: "No orders found" });
+    }
+
+    // Transform orders to calculate totalPrice for each employee
+    const employeeData = {};
+
+    allOrders.forEach((order) => {
+      const employeeId = order.employee._id.toString();
+      const employeeName = order.employee.name;
+
+      const totalPrice = order.drinks.reduce((sum, drink) => {
+        return sum + drink.price;
+      }, 0);
+
+      if (!employeeData[employeeId]) {
+        employeeData[employeeId] = {
+          employeeName,
+          totalPrice: 0,
+          paid: order.paid,
+        };
+      }
+
+      employeeData[employeeId].totalPrice += totalPrice;
+    });
+
+    const result = Object.values(employeeData);
+
+    return res.status(200).json({ msg: "Employees All Bills", data: result });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Server error", error: error.message });
   }
 };
