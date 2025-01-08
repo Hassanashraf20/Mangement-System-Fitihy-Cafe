@@ -17,7 +17,7 @@ const orderSchema = new mongoose.Schema({
       price: { type: Number, required: true },
     },
   ],
-  totalOrdersPrice: { type: Number, required: true },
+  totalOrdersPrice: { type: Number, required: false },
   date: { type: Date, required: true },
   paid: { type: Boolean, default: false },
 });
