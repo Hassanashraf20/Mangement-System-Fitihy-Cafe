@@ -35,6 +35,7 @@ exports.addOrderForEmployee = async (req, res) => {
     }
 
     // Create drinks array with prices
+    let totalOrdersPrice = 0;
     const drinksWithPrices = drinks.map((drink) => {
       const drinkData = drinksData.find((d) => d._id.equals(drink.drinkId));
 
@@ -42,30 +43,31 @@ exports.addOrderForEmployee = async (req, res) => {
         throw new Error(`Invalid quantity for drink: ${drinkData.name}`);
       }
 
+      const drinkTotalPrice = drinkData.price * drink.quantity;
+      totalOrdersPrice += drinkTotalPrice;
+
       return {
         drinkId: drinkData._id,
         name: drinkData.name,
         quantity: drink.quantity,
-        price: drinkData.price * drink.quantity,
+        price: drinkData.price,
+        totalPrice: drinkTotalPrice,
       };
     });
 
     const order = new Order({
       employee: employee._id,
       drinks: drinksWithPrices,
-      date: moment(date, "DD-MM-YYYY").toDate(), // Using moment for date handling
+      totalOrdersPrice,
+      date: moment.utc(date, "DD-MM-YYYY").toDate(),
       paid: false,
     });
-    if (!order) {
-      return res.status(400).json({ msg: "err and order not created!!" });
-    } else {
-      await order.save();
-    }
+    await order.save();
 
     // Populate the employee name and drink names after saving
     const populatedOrder = await Order.findById(order._id)
-      .populate("employee", "name role") // Populate employee name
-      .populate("drinks.drinkId", "name"); // Populate drink name
+      .populate("employee", "name role")
+      .populate("drinks.drinkId", "name");
 
     res
       .status(201)
@@ -122,7 +124,7 @@ exports.removeSpecificDrinkFromOrder = async (req, res) => {
     }
 
     // Convert the date to a valid format
-    const parsedDate = moment(date, "DD-MM-YYYY").toDate();
+    const parsedDate = moment.utc(date, "DD-MM-YYYY").toDate();
 
     // Find the order that matches the employee ID and date
     const order = await Order.findOne({
@@ -167,15 +169,14 @@ exports.getBillForEmployee = async (req, res) => {
   try {
     const { employeeName, startDate, endDate } = req.body;
 
-    // Validate input
     if (!employeeName || !startDate || !endDate) {
       return res
         .status(400)
         .json({ msg: "Please provide employeeName, startDate, and endDate." });
     }
 
-    const start = moment(startDate, "DD-MM-YYYY").startOf("day").toDate();
-    const end = moment(endDate, "DD-MM-YYYY").endOf("day").toDate();
+    const start = moment.utc(startDate, "DD-MM-YYYY").startOf("day").toDate();
+    const end = moment.utc(endDate, "DD-MM-YYYY").endOf("day").toDate();
 
     // Find employee by name
     const employee = await Employee.findOne({ name: employeeName });
@@ -189,10 +190,10 @@ exports.getBillForEmployee = async (req, res) => {
     const orders = await Order.find({
       employee: employee._id,
       date: { $gte: start, $lte: end },
-      paid: false, // Only retrieve unpaid orders
+      paid: false,
     })
-      .populate("employee", "role") // Populate employee details
-      .populate("drinks.drinkId", "name"); // Populate drink names
+      .populate("employee", "role")
+      .populate("drinks.drinkId", "name");
 
     // Handle no orders found
     if (!orders.length) {
@@ -204,15 +205,8 @@ exports.getBillForEmployee = async (req, res) => {
     // Calculate total bill
     let totalBill = 0;
     orders.forEach((order) => {
-      order.drinks.forEach((drink) => {
-        totalBill += drink.price; // Total cost per drink
-      });
+      totalBill += order.totalOrdersPrice;
     });
-
-    await Order.updateOne(
-      { employee: employee._id, paid: false },
-      { $set: { paid: true, totalOrdersPrice: totalBill } }
-    );
 
     // Send the bill response
     res.status(200).json({
@@ -256,6 +250,7 @@ exports.markBillAsPaidAndRemoveOrders = async (req, res) => {
 
     // Remove all paid orders for this employee
     await Order.deleteMany({ employee: employee._id, paid: true });
+    await Order.save();
 
     // Response: All orders marked as paid and removed
     res.status(200).json({
@@ -268,38 +263,33 @@ exports.markBillAsPaidAndRemoveOrders = async (req, res) => {
 
 exports.getAllOrders = async (req, res) => {
   try {
-    // Retrieve all orders and populate employee's name
-    const allOrders = await Order.find().populate("employee", "name");
-
-    if (!allOrders || allOrders.length === 0) {
-      return res.status(404).json({ msg: "No orders found" });
-    }
-
-    // Transform orders to calculate totalPrice for each employee
-    const employeeData = {};
-
-    allOrders.forEach((order) => {
-      const employeeId = order.employee._id.toString();
-      const employeeName = order.employee.name;
-
-      const totalPrice = order.drinks.reduce((sum, drink) => {
-        return sum + drink.price;
-      }, 0);
-
-      if (!employeeData[employeeId]) {
-        employeeData[employeeId] = {
-          employeeName,
-          totalPrice: 0,
-          paid: order.paid,
-        };
-      }
-
-      employeeData[employeeId].totalPrice += totalPrice;
-    });
-
-    const result = Object.values(employeeData);
-
-    return res.status(200).json({ msg: "Employees All Bills", data: result });
+    const orders = await Order.aggregate([
+      {
+        $group: {
+          _id: "$employee",
+          totalBillPrice: { $sum: "$totalOrdersPrice" },
+        },
+      },
+      {
+        $lookup: {
+          from: "employees",
+          localField: "_id",
+          foreignField: "_id",
+          as: "employee",
+        },
+      },
+      {
+        $unwind: "$employee",
+      },
+      {
+        $project: {
+          _id: 0,
+          employeeName: "$employee.name",
+          totalBillPrice: 1,
+        },
+      },
+    ]);
+    return res.status(200).json({ msg: "Employees All Bills", data: orders });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ msg: "Server error", error: error.message });
