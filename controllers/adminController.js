@@ -250,7 +250,6 @@ exports.markBillAsPaidAndRemoveOrders = async (req, res) => {
 
     // Remove all paid orders for this employee
     await Order.deleteMany({ employee: employee._id, paid: true });
-    await Order.save();
 
     // Response: All orders marked as paid and removed
     res.status(200).json({
