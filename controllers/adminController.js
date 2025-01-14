@@ -260,6 +260,55 @@ exports.markBillAsPaidAndRemoveOrders = async (req, res) => {
   }
 };
 
+// exports.getAllOrders = async (req, res) => {
+//   try {
+//     // Step 1: Retrieve all orders with employee details populated
+//     const orders = await Order.find().populate("employee");
+
+//     console.log(orders);
+
+//     if (!orders || orders.length === 0) {
+//       return res.status(404).json({ msg: "No orders found", data: [] });
+//     }
+
+//     // Step 2: Create a map to group orders by employee
+//     const employeeOrders = {};
+
+//     orders.forEach((order) => {
+//       // Check if employee data is available
+//       if (order.employee) {
+//         const employeeId = order.employee._id.toString(); // Ensure employee ID is in string format
+//         if (!employeeOrders[employeeId]) {
+//           employeeOrders[employeeId] = {
+//             employeeName: order.employee.name, // Assuming the employee model has a 'name' field
+//             totalBillPrice: 0,
+//             orders: [],
+//           };
+//         }
+//         // Accumulate totalOrdersPrice for the employee
+//         employeeOrders[employeeId].totalBillPrice += order.totalOrdersPrice;
+//         employeeOrders[employeeId].orders.push(order);
+//       } else {
+//         console.warn(
+//           `Order with ID ${order._id} does not have an employee associated with it.`
+//         );
+//       }
+//     });
+
+//     // Step 3: Prepare the response format with employee name and total bill price
+//     const result = Object.values(employeeOrders).map((empData) => ({
+//       employeeName: empData.employeeName,
+//       totalBillPrice: empData.totalBillPrice,
+//       orders: empData.orders, // Optional, if you want to include the individual orders
+//     }));
+
+//     return res.status(200).json({ msg: "Employees All Bills", data: result });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ msg: "Server error", error: error.message });
+//   }
+// };
+
 exports.getAllOrders = async (req, res) => {
   try {
     const orders = await Order.aggregate([
@@ -287,8 +336,29 @@ exports.getAllOrders = async (req, res) => {
           totalBillPrice: 1,
         },
       },
+      {
+        $group: {
+          _id: null,
+          employees: { $push: "$$ROOT" },
+          finalTotal: { $sum: "$totalBillPrice" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          employees: 1,
+          finalTotal: 1,
+        },
+      },
     ]);
-    return res.status(200).json({ msg: "Employees All Bills", data: orders });
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ msg: "No orders found", data: [] });
+    }
+
+    return res
+      .status(200)
+      .json({ msg: "Employees All Bills", data: orders[0] });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ msg: "Server error", error: error.message });

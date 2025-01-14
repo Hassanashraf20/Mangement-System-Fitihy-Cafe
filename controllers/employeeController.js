@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const apiError = require("../utils/apiError");
 
 const Employee = require("../models/employee");
+const Order = require("../models/order");
 
 // @desc    Create employee
 // @route   POST /api/employee
@@ -41,8 +42,14 @@ exports.getEmp = asyncHandler(async (req, res, next) => {
 // @route   UPDATE /api/employee
 //@acsess   Admin
 exports.updateEmp = asyncHandler(async (req, res, next) => {
+  const allowedRoles = ["EMU", "DENT"];
+  const { role } = req.body;
+  if (role && !allowedRoles.includes(role)) {
+    return next(new apiError(`Invalid role value: ${role}`, 400));
+  }
   const emp = await Employee.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
+    runValidators: true,
   });
 
   if (!emp) {
@@ -56,11 +63,25 @@ exports.updateEmp = asyncHandler(async (req, res, next) => {
 // @route   DELETE /api/employee
 //@acsess   Admin
 exports.deleteEmp = asyncHandler(async (req, res, next) => {
-  const emp = await Employee.findByIdAndDelete(req.params.id);
+  const empId = req.params.id;
 
+  // Check if the employee exists
+  const emp = await Employee.findById(empId);
   if (!emp) {
-    return next(new apiError(`emp not found for this: ${req.params.id}`, 404));
+    return next(new apiError(`Employee not found for ID: ${empId}`, 404));
   }
 
-  res.status(204).send();
+  // Check if the employee has any orders
+  const orders = await Order.find({ employee: empId });
+  if (orders.length > 0) {
+    // Delete all orders for the employee
+    await Order.deleteMany({ employee: empId });
+  }
+
+  // Delete the employee
+  await Employee.findByIdAndDelete(empId);
+
+  res
+    .status(204)
+    .json({ msg: "Employee and associated orders deleted successfully" });
 });
