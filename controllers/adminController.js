@@ -337,6 +337,11 @@ exports.getAllOrders = async (req, res) => {
         },
       },
       {
+        $sort: {
+          employeeName: 1,
+        },
+      },
+      {
         $group: {
           _id: null,
           employees: { $push: "$$ROOT" },
