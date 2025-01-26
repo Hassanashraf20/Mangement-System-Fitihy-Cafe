@@ -260,6 +260,53 @@ exports.markBillAsPaidAndRemoveOrders = async (req, res) => {
   }
 };
 
+exports.partialPay = async (req, res) => {
+  try {
+    const { employeeName, startDate, endDate } = req.body;
+
+    const employee = await Employee.findOne({ name: employeeName });
+    if (!employee) {
+      return res.status(404).json({ msg: "Employee not found" });
+    }
+
+    const fromDate = new Date(startDate);
+    const toDate = new Date(endDate);
+
+    const unpaidOrders = await Order.find({
+      employee: employee._id,
+      paid: false,
+      date: { $gte: fromDate, $lte: toDate },
+    });
+
+    if (!unpaidOrders.length) {
+      return res.status(404).json({
+        msg: "No unpaid orders found for this employee within the specified period",
+      });
+    }
+
+    await Order.updateMany(
+      {
+        employee: employee._id,
+        paid: false,
+        date: { $gte: fromDate, $lte: toDate },
+      },
+      { $set: { paid: true } }
+    );
+
+    await Order.deleteMany({
+      employee: employee._id,
+      paid: true,
+      date: { $gte: startDate, $lte: endDate },
+    });
+
+    res.status(200).json({
+      msg: `All unpaid orders between ${fromDate} and ${endDate} have been marked as paid and removed for : ${employeeName}.`,
+    });
+  } catch (err) {
+    res.status(500).send({ msg: "Server Error", error: err.message });
+  }
+};
+
 // exports.getAllOrders = async (req, res) => {
 //   try {
 //     // Step 1: Retrieve all orders with employee details populated

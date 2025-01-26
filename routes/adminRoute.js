@@ -7,6 +7,7 @@ const {
   getBillForEmployee,
   markBillAsPaidAndRemoveOrders,
   getAllOrders,
+  partialPay,
 } = require("../controllers/adminController");
 
 const router = express.Router();
@@ -29,6 +30,10 @@ router.post("/bill", getBillForEmployee);
 // Admin marks all unpaid bills as paid and removes them for a specific employee by name
 router.put("/pay", markBillAsPaidAndRemoveOrders);
 
+// Admin Partial Pay in specific employee's order Period Date
+router.put("/partial-pay", partialPay);
+
+// Admin retrieves all orders for an employee by name
 router.get("/orders", getAllOrders);
 
 module.exports = router;
