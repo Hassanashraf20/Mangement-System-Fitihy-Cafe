@@ -43,7 +43,7 @@ exports.updateDrink = asyncHandler(async (req, res, next) => {
   const drink = await Drink.findByIdAndUpdate(
     req.params.id,
     { price, unionPrice, dentPrice },
-    { new: true, runValidators: true }
+    { new: true }
   );
 
   if (!drink) {
