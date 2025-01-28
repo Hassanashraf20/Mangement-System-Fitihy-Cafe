@@ -38,17 +38,36 @@ exports.getDrink = asyncHandler(async (req, res, next) => {
 // @desc    UPDATE ONE Drink bi ID
 // @route   UPDATE /api/Drink
 exports.updateDrink = asyncHandler(async (req, res, next) => {
-  const drink = await Drink.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-  });
+  const { price, unionPrice, dentPrice } = req.body;
+
+  const errors = [];
+  if (price !== undefined && (isNaN(price) || price <= 0)) {
+    errors.push("Price must be a number greater than 0.");
+  }
+  if (unionPrice !== undefined && (isNaN(unionPrice) || unionPrice <= 0)) {
+    errors.push("Union price must be a number greater than 0.");
+  }
+  if (dentPrice !== undefined && (isNaN(dentPrice) || dentPrice <= 0)) {
+    errors.push("Dentistry price must be a number greater than 0.");
+  }
+
+  if (errors.length > 0) {
+    return next(new apiError(errors.join(" "), 400));
+  }
+
+  const drink = await Drink.findByIdAndUpdate(
+    req.params.id,
+    { price, unionPrice, dentPrice },
+    { new: true, runValidators: true }
+  );
 
   if (!drink) {
     return next(
-      new apiError(`Drink not found for this: ${req.params.id}`, 404)
+      new apiError(`Drink not found for this ID: ${req.params.id}`, 404)
     );
   }
 
-  res.status(200).json({ data: drink });
+  res.status(200).json({ message: "Drink updated successfully", data: drink });
 });
 
 // @desc    DELETE ONE Drink bi ID
