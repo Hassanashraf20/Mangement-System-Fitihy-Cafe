@@ -40,21 +40,6 @@ exports.getDrink = asyncHandler(async (req, res, next) => {
 exports.updateDrink = asyncHandler(async (req, res, next) => {
   const { price, unionPrice, dentPrice } = req.body;
 
-  const errors = [];
-  if (price <= 0) {
-    errors.push("Price must be a number greater than 0.");
-  }
-  if (unionPrice <= 0) {
-    errors.push("Union price must be a number greater than 0.");
-  }
-  if (dentPrice <= 0) {
-    errors.push("Dentistry price must be a number greater than 0.");
-  }
-
-  if (errors.length > 0) {
-    return next(new apiError(errors.join(" "), 400));
-  }
-
   const drink = await Drink.findByIdAndUpdate(
     req.params.id,
     { price, unionPrice, dentPrice },
