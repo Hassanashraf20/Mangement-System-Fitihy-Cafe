@@ -41,13 +41,13 @@ exports.updateDrink = asyncHandler(async (req, res, next) => {
   const { price, unionPrice, dentPrice } = req.body;
 
   const errors = [];
-  if (price !== undefined && (isNaN(price) || price <= 0)) {
+  if (price <= 0) {
     errors.push("Price must be a number greater than 0.");
   }
-  if (unionPrice !== undefined && (isNaN(unionPrice) || unionPrice <= 0)) {
+  if (unionPrice <= 0) {
     errors.push("Union price must be a number greater than 0.");
   }
-  if (dentPrice !== undefined && (isNaN(dentPrice) || dentPrice <= 0)) {
+  if (dentPrice <= 0) {
     errors.push("Dentistry price must be a number greater than 0.");
   }
 
