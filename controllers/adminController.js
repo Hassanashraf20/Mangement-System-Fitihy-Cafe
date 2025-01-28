@@ -34,6 +34,16 @@ exports.addOrderForEmployee = async (req, res) => {
       return res.status(400).json({ msg: "Some drinks were not found" });
     }
 
+    const getPriceByRole = (role, drink) => {
+      switch (role) {
+        case "union":
+          return drink.unionPrice;
+        case "DENTISTRY":
+          return drink.dentistryPrice;
+        default:
+          return drink.price;
+      }
+    };
     // Create drinks array with prices
     let totalOrdersPrice = 0;
     const drinksWithPrices = drinks.map((drink) => {
@@ -43,14 +53,15 @@ exports.addOrderForEmployee = async (req, res) => {
         throw new Error(`Invalid quantity for drink: ${drinkData.name}`);
       }
 
-      const drinkTotalPrice = drinkData.price * drink.quantity;
+      const price = getPriceByRole(employee.role, drinkData);
+      const drinkTotalPrice = price * drink.quantity;
       totalOrdersPrice += drinkTotalPrice;
 
       return {
         drinkId: drinkData._id,
         name: drinkData.name,
         quantity: drink.quantity,
-        price: drinkData.price,
+        price,
         totalPrice: drinkTotalPrice,
       };
     });
