@@ -38,11 +38,16 @@ exports.getDrink = asyncHandler(async (req, res, next) => {
 // @desc    UPDATE ONE Drink bi ID
 // @route   UPDATE /api/Drink
 exports.updateDrink = asyncHandler(async (req, res, next) => {
-  const { price, unionPrice, dentPrice } = req.body;
+  const { price, unionPrice, dentistryPrice } = req.body;
+
+  const updateFields = {};
+  if (price !== undefined) updateFields.price = price;
+  if (unionPrice !== undefined) updateFields.unionPrice = unionPrice;
+  if (dentistryPrice !== undefined) updateFields.dentistryPrice = dentistryPrice;
 
   const drink = await Drink.findByIdAndUpdate(
     req.params.id,
-    { price, unionPrice, dentPrice },
+    updateFields,
     { new: true }
   );
 
