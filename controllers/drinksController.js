@@ -9,6 +9,8 @@ exports.createDrink = asyncHandler(async (req, res) => {
   const drinks = await Drink.create({
     name: req.body.name,
     price: req.body.price,
+    unionPrice: req.body.unionPrice,
+    dentistryPrice: req.body.dentistryPrice,
   });
   res
     .status(201)
@@ -43,13 +45,12 @@ exports.updateDrink = asyncHandler(async (req, res, next) => {
   const updateFields = {};
   if (price !== undefined) updateFields.price = price;
   if (unionPrice !== undefined) updateFields.unionPrice = unionPrice;
-  if (dentistryPrice !== undefined) updateFields.dentistryPrice = dentistryPrice;
+  if (dentistryPrice !== undefined)
+    updateFields.dentistryPrice = dentistryPrice;
 
-  const drink = await Drink.findByIdAndUpdate(
-    req.params.id,
-    updateFields,
-    { new: true }
-  );
+  const drink = await Drink.findByIdAndUpdate(req.params.id, updateFields, {
+    new: true,
+  });
 
   if (!drink) {
     return next(
