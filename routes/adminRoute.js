@@ -39,7 +39,7 @@ router.put("/partial-pay", partialPay);
 // Admin retrieves all orders for an employee by name
 router.get("/orders", getAllOrders);
 
-router.get("/all-bills/:employeeName", getAllBillForEmployee);
+router.get("/all-bills", getAllBillForEmployee);
 
 router.patch("/orders/update-drink", updateSpecificDrink);
 
