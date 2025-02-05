@@ -381,7 +381,7 @@ exports.getAllOrders = async (req, res) => {
 
 exports.getAllBillForEmployee = async (req, res) => {
   try {
-    const { employeeName } = req.body;
+    const { employeeName } = req.param;
 
     if (!employeeName) {
       return res.status(400).json({ msg: "Please provide employeeName." });
