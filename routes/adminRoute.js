@@ -8,6 +8,9 @@ const {
   markBillAsPaidAndRemoveOrders,
   getAllOrders,
   partialPay,
+  getAllBillForEmployee,
+  updateSpecificDrink,
+  RemoveSpecificDrink,
 } = require("../controllers/adminController");
 
 const router = express.Router();
@@ -35,5 +38,11 @@ router.put("/partial-pay", partialPay);
 
 // Admin retrieves all orders for an employee by name
 router.get("/orders", getAllOrders);
+
+router.get("/all-bills", getAllBillForEmployee);
+
+router.patch("/orders/update-drink", updateSpecificDrink);
+
+router.delete("/orders/remove-drink", RemoveSpecificDrink);
 
 module.exports = router;
