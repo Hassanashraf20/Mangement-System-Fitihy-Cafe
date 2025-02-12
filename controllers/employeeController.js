@@ -42,7 +42,7 @@ exports.getEmp = asyncHandler(async (req, res, next) => {
 // @route   UPDATE /api/employee
 //@acsess   Admin
 exports.updateEmp = asyncHandler(async (req, res, next) => {
-  const allowedRoles = ["EMU", "DENT"];
+  const allowedRoles = ["EMU", "DENT" , "union" , "DENTISTRY"];
   const { role } = req.body;
   if (role && !allowedRoles.includes(role)) {
     return next(new apiError(`Invalid role value: ${role}`, 400));
