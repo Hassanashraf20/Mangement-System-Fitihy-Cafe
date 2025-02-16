@@ -2,7 +2,7 @@ const asyncHandler = require("express-async-handler");
 const apiError = require("../utils/apiError");
 
 const Drink = require("../models/Drinks");
-
+const Order = require("../models/order");
 // @desc    Create Drink
 // @route   POST /api/drink
 exports.createDrink = asyncHandler(async (req, res) => {
@@ -64,6 +64,16 @@ exports.updateDrink = asyncHandler(async (req, res, next) => {
 // @desc    DELETE ONE Drink bi ID
 // @route   DELETE /api/Drink
 exports.deleteDrink = asyncHandler(async (req, res, next) => {
+  const orders = await Order.find({ "drinks.drinkId": req.params.id });
+
+  if (orders.length > 0) {
+    return next(
+      new apiError(
+        `This drink is associated with existing orders and cannot be deleted.`,
+        400
+      )
+    );
+  }
   const drink = await Drink.findByIdAndDelete(req.params.id);
 
   if (!drink) {
