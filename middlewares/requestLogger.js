@@ -1,31 +1,34 @@
 /**
  * Custom Request Logger Middleware
  * Logs every incoming request with method, URL, status, and response time.
- * Used across all mounted routes for well-structured monitoring.
+ * Health check pings on "/" are suppressed to keep logs clean.
  */
 
 const requestLogger = (req, res, next) => {
+  // ✅ Suppress Render's health check pings to avoid log noise
+  const isHealthCheck = req.path === "/" && (req.method === "GET" || req.method === "HEAD");
+
   const start = Date.now();
 
-  // Once the response finishes, log the details
   res.on("finish", () => {
+    if (isHealthCheck) return; // skip logging health checks
+
     const duration = Date.now() - start;
     const timestamp = new Date().toISOString();
     const { method, originalUrl } = req;
     const { statusCode } = res;
 
-    // Color-code status for dev visibility (no effect in Render plain logs)
     const statusLabel =
       statusCode >= 500
-        ? "ERROR"
+        ? "ERROR  "
         : statusCode >= 400
-        ? "WARN"
+        ? "WARN   "
         : statusCode >= 300
         ? "REDIRECT"
-        : "OK";
+        : "OK     ";
 
     console.log(
-      `[${timestamp}] ${statusLabel} | ${method} ${originalUrl} | ${statusCode} | ${duration}ms`
+      `[${timestamp}] ${statusLabel} | ${method.padEnd(6)} ${originalUrl.padEnd(35)} | ${statusCode} | ${duration}ms`
     );
   });
 
