@@ -1,50 +1,45 @@
-const apiError = require("../utils/apiError")
+const apiError = require("../utils/apiError");
 
+// Development: full error detail for debugging
+const sendErrorForDev = (err, res) => {
+  console.error(`[ERROR DEV] ${err.status} | ${err.message}`);
+  console.error(err.stack);
+  return res.status(err.statusCode).json({
+    status: err.status,
+    error: err,
+    message: err.message, // ✅ Fixed: was "massage" (typo)
+    stack: err.stack,
+  });
+};
 
-    const sendErrorFordev= (err,res)=>{
-            return  res.status(err.statusCode).json({
-             status:err.status,
-             Error:err,
-             massage:err.massage,
-             stack:err.stack
-    
-            })
-
-    
-     }
-
-
-    const sendErrorForprod= (err,res)=>{
-        return  res.status(err.statusCode).json({
-            status:err.status,
-            massage:err.massage
-            
-            
-    
-        })
-    }
+// Production: safe error for clients — no stack traces exposed
+const sendErrorForProd = (err, res) => {
+  console.error(`[ERROR PROD] ${err.statusCode} | ${err.status} | ${err.message}`);
+  return res.status(err.statusCode).json({
+    status: err.status,
+    message: err.message, // ✅ Fixed: was "massage" (typo)
+  });
+};
 
 const handleJwtInvalidSignature = () =>
-    new apiError('Invalid token, please login again..', 401)
-  
+  new apiError("Invalid token, please login again.", 401);
+
 const handleJwtExpired = () =>
-    new apiError('Expired token, please login again..', 401)
+  new apiError("Expired token, please login again.", 401);
 
+const globaleError = (err, req, res, next) => {
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || "error";
 
-const globaleError = (err,req,res,next)=>{
-    err.statusCode=err.statusCode || 500
-    err.status=err.status  || "Error"
+  if (process.env.NODE_ENV === "development") {
+    sendErrorForDev(err, res);
+  } else {
+    // Handle known JWT errors
+    if (err.name === "JsonWebTokenError") err = handleJwtInvalidSignature();
+    if (err.name === "TokenExpiredError") err = handleJwtExpired();
 
-        if(process.env.NODE_ENV == 'development'){
-            sendErrorFordev(err,res)
-        }else {
-            if(err.name=='JsonWebTokenError') err=handleJwtInvalidSignature()
-            if(err.name=='TokenExpiredError') err=handleJwtExpired()
-            
-            sendErrorForprod(err,res)
-        }
-    }
+    sendErrorForProd(err, res);
+  }
+};
 
-
-
-    module.exports = globaleError
+module.exports = globaleError;

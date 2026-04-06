@@ -4,13 +4,13 @@ const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
 const cors = require("cors");
-//const compression = require('compression')
 
 dotenv.config({ path: "config.env" });
 
 const apiError = require(`./utils/apiError`);
 const dbconnection = require("./config/database");
 const globaleError = require(`./middlewares/errorMidlleware`);
+const requestLogger = require("./middlewares/requestLogger");
 
 //mountRoutes
 const mountRoutes = require("./routes");
@@ -20,45 +20,55 @@ const app = express();
 app.use(cors());
 app.options("*", cors());
 
-// // compress responses
-// app.use(compression())
-
-//Dtaebase Call
+//Database Call
 dbconnection();
 
-//Midlleware
+//Middleware
 app.use(express.json());
 
-if (process.env.Node_ENV == "development") {
-  app.use(morgan("dev"));
-  console.log(`mode:${process.env.Node_ENV} `);
+// ✅ Fixed: was "Node_ENV" (wrong casing) — now correctly reads NODE_ENV
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("dev")); // Colorized compact logs for development
+  console.log(`[SERVER] Mode: DEVELOPMENT`);
 } else {
-  app.use(morgan("prod"));
-  console.log(`mode:${process.env.Node_ENV} `);
+  app.use(morgan("combined")); // ✅ Fixed: "prod" is not a valid morgan format — use "combined" for production
+  console.log(`[SERVER] Mode: PRODUCTION`);
 }
 
-// Mount Routse
+// ✅ Custom structured request logger — logs all routes with method, URL, status, and response time
+app.use(requestLogger);
+
+// Mount Routes
 mountRoutes(app);
 
-//Create Handle Unhandled Routes and Send Error to Error Handling Middleware
+// Handle Unhandled Routes
 app.all("*", (req, res, next) => {
-  next(new apiError(`can not find this route: ${req.originalUrl}`, 400));
+  console.warn(`[ROUTE NOT FOUND] ${req.method} ${req.originalUrl}`);
+  next(new apiError(`Can not find this route: ${req.originalUrl}`, 404));
 });
 
-//Globale Error Handling Middleware
+// Global Error Handling Middleware
 app.use(globaleError);
 
-//Unhandled Rejections Errors
+// Unhandled Promise Rejections
 process.on("unhandledRejection", (err) => {
-  console.log(`UnhandledRejection Errors: ${err}`);
+  console.error(`[UNHANDLED REJECTION] ${err.name}: ${err.message}`);
+  console.error(err.stack);
   server.close(() => {
-    console.error(`APP shut down...`);
+    console.error(`[SERVER] Shutting down due to unhandled rejection...`);
     process.exit(1);
   });
 });
 
-// listen server to port
-const PORT = process.env.port || 5000;
+// Uncaught Exceptions (safety net)
+process.on("uncaughtException", (err) => {
+  console.error(`[UNCAUGHT EXCEPTION] ${err.name}: ${err.message}`);
+  console.error(err.stack);
+  process.exit(1);
+});
+
+// Start Server
+const PORT = process.env.PORT || process.env.port || 5000;
 const server = app.listen(PORT, () => {
-  console.log(`server is running on port: ${PORT}`);
+  console.log(`[SERVER] Running on port: ${PORT} | ENV: ${process.env.NODE_ENV || "not set"}`);
 });
